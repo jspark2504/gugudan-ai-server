@@ -58,10 +58,10 @@ jobs:
       # 기존 컨테이너 중지 및 정리
       - name: Stop old container
         run: |
-          docker-compose down
+          docker compose down
           docker image prune -f
           docker logout
 
       # Docker Compose로 FastAPI + MySQL + Redis 실행
       - name: Run containers
-        run: docker-compose up -d --build
+        run: docker compose up -d --build
