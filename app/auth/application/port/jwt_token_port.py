@@ -10,6 +10,7 @@ from typing import Optional
 class TokenPayload:
     """JWT Token payload data."""
 
+    jti: str  # JWT ID for blacklisting
     account_id: int
     encrypted_key: str  # AES encrypted user-specific UUID
     encrypted_key_iv: str  # IV used for encryption
@@ -85,5 +86,17 @@ class JWTTokenPort(ABC):
 
         Returns:
             New TokenPair if refresh successful, None otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def blacklist_token(self, token: str) -> bool:
+        """Add a token to the blacklist to prevent reuse.
+
+        Args:
+            token: The JWT token to blacklist.
+
+        Returns:
+            True if successfully blacklisted, False otherwise.
         """
         pass

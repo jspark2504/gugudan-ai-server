@@ -107,15 +107,22 @@ async def get_current_user_session(
 
 @router.post("/logout", response_model=LogoutResponse)
 async def logout(
+    request: Request,
     response: Response,
     jwt_payload: TokenPayload | None = Depends(get_optional_jwt_payload),
     session: Session | None = Depends(get_optional_session),
     auth_usecase: AuthUseCase = Depends(get_auth_usecase),
 ) -> LogoutResponse:
-    """Logout - clear JWT and session cookies.
+    """Logout - blacklist JWT and clear cookies.
 
     Supports both JWT and session-based authentication.
+    Blacklists JWT token to prevent reuse until expiration.
     """
+    # Blacklist JWT token if exists
+    token = request.cookies.get("access_token")
+    if token:
+        auth_usecase.blacklist_jwt(token)
+
     # Destroy session if exists
     if session:
         auth_usecase.logout(session.session_id)

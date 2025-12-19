@@ -12,6 +12,7 @@ from app.auth.application.usecase.auth_usecase import AuthUseCase
 from app.auth.application.usecase.session_usecase import SessionUseCase
 from app.auth.domain.entity.session import Session
 from app.auth.infrastructure.cache.session_repository_impl import SessionRepositoryImpl
+from app.auth.infrastructure.cache.token_blacklist_impl import TokenBlacklistImpl
 from app.auth.infrastructure.jwt.jwt_token_service import JWTTokenService
 from app.account.infrastructure.repository.account_repository_impl import AccountRepositoryImpl
 from config.database.session import SessionLocal
@@ -58,9 +59,16 @@ def get_account_usecase(
     return AccountUseCase(account_repo)
 
 
-def get_jwt_service() -> JWTTokenService:
-    """Get JWT token service dependency."""
-    return JWTTokenService()
+def get_token_blacklist() -> TokenBlacklistImpl:
+    """Get token blacklist dependency."""
+    return TokenBlacklistImpl()
+
+
+def get_jwt_service(
+    blacklist: TokenBlacklistImpl = Depends(get_token_blacklist),
+) -> JWTTokenService:
+    """Get JWT token service dependency with blacklist support."""
+    return JWTTokenService(blacklist=blacklist)
 
 
 def get_auth_usecase(

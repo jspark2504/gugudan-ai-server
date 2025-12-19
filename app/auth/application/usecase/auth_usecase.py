@@ -195,6 +195,19 @@ class AuthUseCase:
         """
         self._session_usecase.destroy_session(session_id)
 
+    def blacklist_jwt(self, token: str) -> bool:
+        """Blacklist a JWT token to prevent reuse.
+
+        Args:
+            token: The JWT token to blacklist.
+
+        Returns:
+            True if successfully blacklisted, False otherwise.
+        """
+        if self._jwt_service is None:
+            return False
+        return self._jwt_service.blacklist_token(token)
+
     def validate_session(self, session_id: str) -> Session | None:
         """Validate a session.
 

@@ -4,6 +4,7 @@ Implements JWT token creation and validation with:
 - 12-hour expiration
 - AES-encrypted user-specific keys
 - CSRF token integration
+- Token blacklisting support
 - Environment-aware secure cookie settings
 """
 
@@ -18,6 +19,7 @@ from app.auth.application.port.jwt_token_port import (
     TokenPair,
     TokenPayload,
 )
+from app.auth.application.port.token_blacklist_port import TokenBlacklistPort
 from app.common.infrastructure.encryption import TokenKeyGenerator
 from config.settings import settings
 
@@ -30,18 +32,24 @@ class JWTTokenService(JWTTokenPort):
     - 12-hour validity period
     - AES-encrypted user-specific subject identifier
     - Embedded CSRF token for double-submit cookie pattern
+    - Token blacklist support for logout/revocation
     """
 
     ALGORITHM = "HS256"
     TOKEN_EXPIRY_HOURS = 12
 
-    def __init__(self):
-        """Initialize JWT token service."""
+    def __init__(self, blacklist: Optional[TokenBlacklistPort] = None):
+        """Initialize JWT token service.
+
+        Args:
+            blacklist: Optional token blacklist for revocation support.
+        """
         self._secret_key = settings.JWT_SECRET_KEY
         self._master_key = TokenKeyGenerator.derive_key_from_secret(
             settings.JWT_ENCRYPTION_KEY
         )
         self._key_generator = TokenKeyGenerator(self._master_key)
+        self._blacklist = blacklist
 
     def create_token(
         self,
@@ -57,6 +65,9 @@ class JWTTokenService(JWTTokenPort):
         Returns:
             TokenPair containing access token and CSRF token.
         """
+        # Generate unique JWT ID for blacklisting
+        jti = secrets.token_urlsafe(16)
+
         # Generate CSRF token
         csrf_token = secrets.token_urlsafe(32)
 
@@ -71,6 +82,7 @@ class JWTTokenService(JWTTokenPort):
 
         # Create JWT payload
         payload = {
+            "jti": jti,
             "sub": str(account_id),
             "enc_key": encrypted_key,
             "enc_iv": encrypted_key_iv,
@@ -96,11 +108,15 @@ class JWTTokenService(JWTTokenPort):
     def validate_token(self, token: str) -> Optional[TokenPayload]:
         """Validate a JWT token and extract payload.
 
+        Checks:
+        1. Token signature and expiration
+        2. Token not in blacklist (if blacklist is configured)
+
         Args:
             token: The JWT token string.
 
         Returns:
-            TokenPayload if valid, None if invalid or expired.
+            TokenPayload if valid, None if invalid, expired, or blacklisted.
         """
         try:
             payload = jwt.decode(
@@ -109,7 +125,14 @@ class JWTTokenService(JWTTokenPort):
                 algorithms=[self.ALGORITHM],
             )
 
+            jti = payload["jti"]
+
+            # Check if token is blacklisted
+            if self._blacklist and self._blacklist.is_blacklisted(jti):
+                return None
+
             return TokenPayload(
+                jti=jti,
                 account_id=int(payload["sub"]),
                 encrypted_key=payload["enc_key"],
                 encrypted_key_iv=payload["enc_iv"],
@@ -124,6 +147,39 @@ class JWTTokenService(JWTTokenPort):
             return None
         except (KeyError, ValueError):
             return None
+
+    def blacklist_token(self, token: str) -> bool:
+        """Add a token to the blacklist.
+
+        Args:
+            token: The JWT token string to blacklist.
+
+        Returns:
+            True if successfully blacklisted, False otherwise.
+        """
+        if not self._blacklist:
+            return False
+
+        try:
+            # Decode without full validation to get jti and exp
+            payload = jwt.decode(
+                token,
+                self._secret_key,
+                algorithms=[self.ALGORITHM],
+                options={"verify_exp": False},  # Allow expired tokens to be blacklisted
+            )
+
+            jti = payload["jti"]
+            exp = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+            now = datetime.now(timezone.utc)
+
+            # Calculate remaining TTL (or minimum 1 second)
+            ttl_seconds = max(int((exp - now).total_seconds()), 1)
+
+            self._blacklist.add_to_blacklist(jti, ttl_seconds)
+            return True
+        except (jwt.InvalidTokenError, KeyError, ValueError):
+            return False
 
     def validate_csrf(self, token: str, csrf_token: str) -> bool:
         """Validate that the CSRF token matches the one in the JWT.
