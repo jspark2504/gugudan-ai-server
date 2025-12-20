@@ -4,6 +4,7 @@ from typing import Optional
 
 from app.account.domain.entity.account import Account
 from app.account.application.port.account_repository_port import AccountRepositoryPort
+from app.account.domain.entity.account_enums import Gender, Mbti
 from app.common.domain.exceptions import AccountNotFoundException
 
 
@@ -106,4 +107,30 @@ class AccountUseCase:
             raise AccountNotFoundException(account_id)
 
         account.agree_to_terms()
+        return self._repository.save(account)
+
+    def update_my_mbti_gender(self, account_id: int, gender: Optional[Gender] = None, mbti: Optional[Mbti] = None,) -> Account:
+        """Update the authenticated user's MBTI and/or gender.
+
+        Args:
+            account_id: The account's unique identifier.
+            gender: New gender (optional).
+            mbti: New MBTI (optional).
+
+        Returns:
+            The updated account.
+
+        Raises:
+            AccountNotFoundException: If account doesn't exist.
+        """
+        account = self._repository.find_by_id(account_id)
+        if not account:
+            raise AccountNotFoundException(account_id)
+
+        # Update only provided fields
+        if gender is not None:
+            account.gender = gender
+        if mbti is not None:
+            account.mbti = mbti
+
         return self._repository.save(account)
