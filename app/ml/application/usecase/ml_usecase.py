@@ -1,10 +1,11 @@
-import os
 import base64
+import os
+
 from dotenv import load_dotenv
 
-from app.ml.application.port.ml_repository_port import MLRepositoryPort
 from app.common.infrastructure.encryption import AESEncryption
 from app.config.anonymizer import Anonymizer
+from app.ml.application.port.ml_repository_port import MLRepositoryPort
 
 load_dotenv()
 AES_KEY = base64.b64decode(os.getenv("AES_KEY"))

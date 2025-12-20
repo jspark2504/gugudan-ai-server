@@ -1,6 +1,5 @@
 """OpenAI GPT API 호출 모듈."""
 
-import asyncio
 import os
 from typing import Optional, AsyncIterator
 

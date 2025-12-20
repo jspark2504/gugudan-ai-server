@@ -1,5 +1,5 @@
-import re
 import hashlib
+import re
 
 from dotenv import load_dotenv
 

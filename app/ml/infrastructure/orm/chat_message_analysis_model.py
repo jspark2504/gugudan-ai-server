@@ -1,3 +1,5 @@
+from enum import Enum as PyEnum
+
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -9,7 +11,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.mysql import JSON
 from sqlalchemy.sql import func
-from enum import Enum as PyEnum
 
 from app.config.database.session import Base
 
