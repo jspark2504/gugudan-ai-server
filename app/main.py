@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.conversation.adapter.input.web.conversation_router import conversation_router
+
 # Load environment variables first
 load_dotenv()
 
@@ -13,7 +15,6 @@ from app.auth.adapter.input.web.router import router as auth_router
 from app.account.infrastructure.orm.account_model import AccountModel  # noqa: F401
 from app.config.database.session import Base, engine
 from app.config.settings import settings
-from app.message_log.adapter.input.web.message_log_router import router as message_log_router
 
 
 @asynccontextmanager
@@ -47,8 +48,7 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(auth_router, prefix="/api/v1")
-app.include_router(message_log_router, prefix="/api/v1/message-logs")
-
+app.include_router(conversation_router, prefix="/conversation")
 
 @app.get("/health")
 async def health_check():
