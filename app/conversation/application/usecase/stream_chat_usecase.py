@@ -50,10 +50,23 @@ class StreamChatUsecase:
             contents_type=contents_type,
         )
 
-        # 3. 프롬프트 구성 (애그리거트 활용)
-        base_instr = "당신은 따뜻한 대화 동반자입니다...\n\n"
-        full_prompt = base_instr + conversation.get_prompt_context(self.crypto_service)
-        full_prompt += f"사용자: {message}\n상담사: "
+        # 3. 프롬프트 구성 (말씀하신 페르소나 적용)
+        # 시스템 지침: 상담사의 성격과 제약 사항 정의
+        system_instruction = (
+            "당신은 연애, 커플, 이혼 등 관계에서 발생하는 감정과 대화 문제를 함께 나누는 따뜻한 대화 동반자입니다. "
+            "사용자를 진단하거나 분석하려 하지 마세요. 사용자가 스스로 생각을 정리할 수 있도록 경청하고 공감하며 대화를 이어가세요.\n\n"
+        )
+
+        # 히스토리 컨텍스트: 애그리거트에서 복호화된 대화 이력을 가져옴
+        history_context = conversation.get_prompt_context(self.crypto_service)
+
+        # 최종 프롬프트 조립
+        full_prompt = (
+            f"{system_instruction}"
+            f"{history_context}"
+            f"사용자: {message}\n"
+            f"상담사: "
+        )
 
         # 4. AI 응답 스트리밍
         assistant_full_message = ""
