@@ -9,6 +9,7 @@ alembic>=1.13.0
 
 # Cryptography
 cryptography>=42.0.0
+pycryptodome>=3.23.0
 
 # Cache
 redis>=5.0.0
