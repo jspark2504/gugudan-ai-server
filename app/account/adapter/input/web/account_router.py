@@ -34,7 +34,6 @@ def get_current_account_id(
     session: Session | None = Depends(get_optional_session),
 ) -> int:
 
-    print("get_current_account_id")
     if jwt_payload:
         return jwt_payload.account_id
     if session:

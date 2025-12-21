@@ -25,20 +25,14 @@ class StreamChatUsecase:
             contents_type: str,
     ) -> AsyncIterator[bytes]:
 
-        print(f"in execute ")
         await self.usage_meter.check_available(account_id)
 
         # 1. 데이터 로드 및 애그리거트 생성
         room_orm = await self.chat_room_repo.find_by_id(room_id)
         msg_orms = await self.chat_message_repo.find_by_room_id(room_id)
 
-        print(f"room_orm {room_orm}")
-        print(f"msg_orms {msg_orms}")
         from app.conversation.domain.conversation.aggregate import Conversation
         conversation = Conversation(room=room_orm, messages=msg_orms)
-
-
-        print(f"conversation {conversation}")
 
         if not conversation.is_active():
             raise HTTPException(status_code=400, detail="채팅방이 활성 상태가 아닙니다.")
@@ -56,7 +50,6 @@ class StreamChatUsecase:
             contents_type=contents_type,
         )
 
-        print(f"saved_user {saved_user}")
         # 3. 프롬프트 구성 (말씀하신 페르소나 적용)
         # 시스템 지침: 상담사의 성격과 제약 사항 정의
         system_instruction = (
@@ -67,8 +60,6 @@ class StreamChatUsecase:
         # 히스토리 컨텍스트: 애그리거트에서 복호화된 대화 이력을 가져옴
         history_context = conversation.get_prompt_context(self.crypto_service)
 
-        print(f"history_context {history_context}")
-
         # 최종 프롬프트 조립
         full_prompt = (
             f"{system_instruction}"
@@ -77,19 +68,14 @@ class StreamChatUsecase:
             f"상담사: "
         )
 
-        print(f"full_prompt {full_prompt}")
-
         # 4. AI 응답 스트리밍
         assistant_full_message = ""
         async for chunk in self.llm_chat_port.call_gpt(full_prompt):
             assistant_full_message += chunk
             yield chunk.encode("utf-8")
 
-        print(f"assistant_full_message {assistant_full_message}")
-
         # 5. AI 메시지 저장 (부모: 유저 메시지 ID)
         assistant_encrypted, assistant_iv = self.crypto_service.encrypt(assistant_full_message)
-        print(f"assistant_encrypted {assistant_encrypted}")
 
         await self.chat_message_repo.save_message(
             room_id=room_id,

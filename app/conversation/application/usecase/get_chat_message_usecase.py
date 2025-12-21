@@ -35,7 +35,6 @@ class GetChatMessagesUseCase:
                     )
                 except Exception as e:
                     msg_id = getattr(m, 'message_id', getattr(m, 'id', 'unknown'))
-                    print(f"복호화 에러 (ID: {msg_id}): {e}")
                     content_text = "[복호화 오류]"
 
             # 3. 반환 데이터 조립
