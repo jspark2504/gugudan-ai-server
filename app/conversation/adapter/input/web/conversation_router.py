@@ -30,9 +30,12 @@ async def get_my_rooms(
         account_id: int = Depends(get_current_account_id),
         db: Session = Depends(get_db_session)  # 1. 세션 주입 필요
 ):
+    print('get_my_rooms')
     # 2. 레포지토리에 현재 세션을 넣어서 생성
     room_repo = ChatRoomRepositoryImpl(db)
+    print(f"room_repo {room_repo}")
     uc = GetChatRoomsUseCase(room_repo)
+    print(f"uc {uc}")
 
     rooms = await uc.execute(account_id)
     return rooms

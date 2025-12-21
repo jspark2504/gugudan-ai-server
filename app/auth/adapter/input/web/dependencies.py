@@ -29,6 +29,7 @@ def get_db() -> Generator[DBSession, None, None]:
 
 def get_session_repository() -> SessionRepositoryImpl:
     """Get session repository dependency."""
+    print("get_session_repository")
     return SessionRepositoryImpl()
 
 
@@ -47,6 +48,7 @@ def get_csrf_usecase() -> CSRFUseCase:
 def get_session_usecase(
     session_repo: SessionRepositoryImpl = Depends(get_session_repository),
 ) -> SessionUseCase:
+    print("get_session_usecase")
     """Get session usecase dependency."""
     return SessionUseCase(session_repo)
 
@@ -59,6 +61,7 @@ def get_account_usecase(
 
 
 def get_token_blacklist() -> TokenBlacklistImpl:
+    print("get_token_blacklist")
     """Get token blacklist dependency."""
     return TokenBlacklistImpl()
 
@@ -66,6 +69,7 @@ def get_token_blacklist() -> TokenBlacklistImpl:
 def get_jwt_service(
     blacklist: TokenBlacklistImpl = Depends(get_token_blacklist),
 ) -> JWTTokenService:
+    print("get_jwt_service")
     """Get JWT token service dependency with blacklist support."""
     return JWTTokenService(blacklist=blacklist)
 
@@ -118,6 +122,7 @@ def get_optional_session(
 
     Unlike get_current_session, this doesn't raise an error if not authenticated.
     """
+    print("get_optional_session")
     session_id = request.cookies.get("session_id")
 
     if not session_id:
@@ -170,6 +175,7 @@ def get_optional_jwt_payload(
 
     Unlike get_current_jwt_payload, this doesn't raise an error if not authenticated.
     """
+    print("get_optional_jwt_payload")
     token = request.cookies.get("access_token")
 
     if not token:
