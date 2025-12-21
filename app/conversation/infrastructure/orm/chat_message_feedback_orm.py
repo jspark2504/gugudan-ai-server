@@ -9,7 +9,6 @@ from sqlalchemy import (
     Enum as SAEnum,
 )
 from sqlalchemy.sql import func
-from enum import Enum as PyEnum
 
 from app.config.database.session import Base
 from app.conversation.domain.chat_room.enums import SatisfiedStatus

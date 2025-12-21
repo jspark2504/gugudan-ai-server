@@ -40,17 +40,19 @@ class MLRepositoryImpl(MLRepositoryPort):
 
             user_q = (
                 self.db.query(
+                    m1.id.label("id"),
                     literal("USER").label("role"),
                     m1.content_enc.label("message"),
                     literal(None).label("parent"),
-                    m1.created_at.label("created_at")
+                    m1.iv.label("iv"),
+                    m1.created_at.label("created_at"),
                 )
                 .join(m2, m1.room_id == m2.room_id)
                 .join(MessageFeedbackModel, m2.id == MessageFeedbackModel.message_id)
                 .filter(
                     m1.role == "USER",
                     m2.role == "ASSISTANT",
-                    m2.parent_message_id == m1.id,
+                    m2.parent_id == m1.id,
                     MessageFeedbackModel.satisfaction == "SATISFIED",
                     m1.created_at >= start_dt,
                     m1.created_at < end_dt,
@@ -59,17 +61,19 @@ class MLRepositoryImpl(MLRepositoryPort):
 
             assistant_q = (
                 self.db.query(
+                    m2.id.label("id"),
                     literal("ASSISTANT").label("role"),
                     m2.content_enc.label("message"),
-                    m2.parent_message_id.label("parent"),
-                    m2.created_at.label("created_at")
+                    m2.parent_id.label("parent"),
+                    m2.iv.label("iv"),
+                    m2.created_at.label("created_at"),
                 )
                 .join(m1, m1.room_id == m2.room_id)
                 .join(MessageFeedbackModel, m2.id == MessageFeedbackModel.message_id)
                 .filter(
                     m1.role == "USER",
                     m2.role == "ASSISTANT",
-                    m2.parent_message_id == m1.id,
+                    m2.parent_id == m1.id,
                     MessageFeedbackModel.satisfaction == "SATISFIED",
                     m2.created_at >= start_dt,
                     m2.created_at < end_dt,
@@ -80,15 +84,15 @@ class MLRepositoryImpl(MLRepositoryPort):
 
             result: List[CounselRow] = [
                 {
+                    "id": row.id,
                     "role": row.role,
                     "message": row.message,
                     "parent": row.parent,
+                    "iv": row.iv,
                     "created_at": row.created_at
                 }
                 for row in rows
             ]
-
-            print(f"result : {result}")
 
             return result
 

@@ -23,30 +23,72 @@ class MLUseCase:
 
         anonymizer = Anonymizer()
 
-        messages = [
-            {"role": "system", "content": "당신은 연애 심리 상담가입니다."}
-        ]
+        # USER 메시지 맵
+        user_map = {}
 
         for row in chat_datas:
-            # 1. 복호화
+            if row["role"] != "USER":
+                continue
+
             decrypted = AESEncryption.decrypt(
-                encrypted_data_base64=row.message,
-                iv_base64=row.iv,
+                encrypted_data_base64=row["message"],
+                iv_base64=row["iv"],
                 key=AES_KEY
             )
 
-            # 2. 비식별화
-            content = anonymizer.anonymize(decrypted)
+            user_map[row["id"]] = anonymizer.anonymize(decrypted)
 
-            # 3. role 매핑
-            if row.role == "USER":
-                messages.append({"role": "user", "content": content})
-            elif row.role == "ASSISTANT":
-                messages.append({"role": "assistant", "content": content})
+        jsonl_data = []
 
-        print(f"messages: {messages}")
+        for row in chat_datas:
+            if row["role"] != "ASSISTANT":
+                continue
 
-        return {"messages": messages}
+            user_content = user_map.get(row["parent"])
+            if not user_content:
+                continue
+
+            decrypted = AESEncryption.decrypt(
+                encrypted_data_base64=row["message"],
+                iv_base64=row["iv"],
+                key=AES_KEY
+            )
+
+            assistant_content = anonymizer.anonymize(decrypted)
+
+            jsonl_data.append({
+                "messages": [
+                    {"role": "system", "content": "당신은 연애 심리 상담가입니다."},
+                    {"role": "user", "content": user_content},
+                    {"role": "assistant", "content": assistant_content},
+                ]
+            })
+
+
+        # messages = [
+        #     {"role": "system", "content": "당신은 연애 심리 상담가입니다."}
+        # ]
+        #
+        # for row in chat_datas:
+        #     # 1. 복호화
+        #     decrypted = AESEncryption.decrypt(
+        #         encrypted_data_base64=row["message"],
+        #         iv_base64=row["iv"],
+        #         key=AES_KEY
+        #     )
+        #
+        #     # 2. 비식별화
+        #     content = anonymizer.anonymize(decrypted)
+        #
+        #     # 3. role 매핑
+        #     if row["role"] == "USER":
+        #         messages.append({"role": "user", "content": content})
+        #     elif row["role"] == "ASSISTANT":
+        #         messages.append({"role": "assistant", "content": content})
+
+        print(f"messages: {jsonl_data}")
+
+        return {"messages": jsonl_data}
 
     def get_counsel_data(self, chat_message_id: int, chat_message_feedback_id: int) -> dict:
         pass

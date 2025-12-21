@@ -83,8 +83,15 @@ class AESEncryption:
         Returns:
             The decrypted plaintext.
         """
-        encrypted_data = base64.b64decode(encrypted_data_base64)
-        iv = base64.b64decode(iv_base64)
+        if isinstance(encrypted_data_base64, (bytes, bytearray)):
+            encrypted_data = encrypted_data_base64
+        else:
+            encrypted_data = base64.b64decode(encrypted_data_base64)
+
+        if isinstance(iv_base64, (bytes, bytearray)):
+            iv = iv_base64
+        else:
+            iv = base64.b64decode(iv_base64)
 
         # Decrypt
         cipher = Cipher(
