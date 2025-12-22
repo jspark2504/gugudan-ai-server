@@ -12,6 +12,7 @@ services:
     depends_on:
       - mysql
       - redis
+      - qdrant
     restart: always
     networks:
       - backend_net
@@ -22,6 +23,7 @@ services:
     command: >
       /wait-for-it.sh mysql:3306 --
       /wait-for-it.sh redis:6379 --
+      /wait-for-it.sh qdrant:6333 --
       python -m uvicorn app.main:app --host 0.0.0.0 --port 33333 --reload
 
   # 2. MySQL
@@ -55,10 +57,24 @@ services:
     networks:
       - backend_net
 
+  # 4. Qdrant Vector DB
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant-container
+    restart: always
+    ports:
+      - "6333:6333"  # HTTP API
+      - "6334:6334"   # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - backend_net
+
 # Volume definitions
 volumes:
   mysql_data:
   redis_data:
+  qdrant_data:
 
 # Network definitions
 networks:

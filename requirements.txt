@@ -27,6 +27,8 @@ PyJWT>=2.8.0
 
 # AI/ML
 openai
+sentence-transformers>=2.2.0
+qdrant-client>=1.7.0
 
 # Settings & Validation
 pydantic[email]>=2.5.0

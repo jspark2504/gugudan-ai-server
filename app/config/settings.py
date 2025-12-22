@@ -59,6 +59,14 @@ class Settings(BaseSettings):
     # Frontend URL for redirects after OAuth
     FRONTEND_URL: str
 
+    # Qdrant Vector DB
+    QDRANT_HOST: str = "localhost"
+    QDRANT_PORT: int = 6333
+    QDRANT_GRPC_PORT: int = 6334
+    QDRANT_API_KEY: str = ""  # Optional, for cloud Qdrant
+    QDRANT_COLLECTION_NAME: str = "counsel_data"
+    QDRANT_VECTOR_SIZE: int = 384  # sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+
     @property
     def is_production(self) -> bool:
         """Check if running in production environment."""

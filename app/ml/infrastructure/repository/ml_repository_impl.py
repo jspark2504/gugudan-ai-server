@@ -26,9 +26,14 @@ class MLRepositoryImpl(MLRepositoryPort):
             cls.__instance = cls()
         return cls.__instance
 
-    def __init__(self):
-        if not hasattr(self, 'db'):
-            self.db: Session = get_db_session()
+    def __init__(self, session: Session | None = None):
+        if session is not None:
+            self.db: Session = session
+            self._db_generator = None
+        else:
+            # get_db_session()은 generator를 반환하므로 next()로 Session을 꺼냄
+            self._db_generator = get_db_session()
+            self.db: Session = next(self._db_generator)
 
     def get_counsel_data(self, start: str, end: str) -> List[CounselRow]:
         try:
