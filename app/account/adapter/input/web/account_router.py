@@ -6,6 +6,7 @@ from app.auth.adapter.input.web.dependencies import (
 )
 from app.auth.application.port.jwt_token_port import TokenPayload
 from app.auth.domain.entity.session import Session
+from app.config.database.session import get_db_session
 
 from app.account.adapter.input.web.response.update_mbti_gender_response import UpdateMbtiGenderResponse
 from app.account.adapter.input.web.request.update_mbti_gender_Request import UpdateMbtiGenderRequest
@@ -48,11 +49,15 @@ def get_current_account_id(
 def edit_my_mbti_gender(
     req: UpdateMbtiGenderRequest,
     account_id: int = Depends(get_current_account_id),
+    db: Session = Depends(get_db_session),
 ):
     if req.gender is None and req.mbti is None:
         raise HTTPException(status_code=400, detail="Nothing to update")
 
-    updated = account_usecase.update_my_mbti_gender(
+    repo = AccountRepositoryImpl(db)
+    usecase = AccountUseCase(repo)
+
+    updated = usecase.update_my_mbti_gender(
         account_id=account_id,
         gender=req.gender,
         mbti=req.mbti,
@@ -63,3 +68,4 @@ def edit_my_mbti_gender(
         gender=updated.gender,
         mbti=updated.mbti,
     )
+

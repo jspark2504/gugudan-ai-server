@@ -2,6 +2,7 @@ from enum import Enum
 
 class ChatRoomStatus(Enum):
     ACTIVE = "ACTIVE"
+    LOCKED = "LOCKED"
     ENDED = "ENDED"
 
 class ChatCategory(Enum):

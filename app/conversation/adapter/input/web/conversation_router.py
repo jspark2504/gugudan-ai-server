@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 # 전역 객체는 상태가 없는 것들만 유지
 from app.config.call_gpt import CallGPT
 from app.conversation.adapter.input.web.request.chat_feedback_request import ChatFeedback
+from app.conversation.application.usecase.end_chat_usecase import EndChatUseCase
+from app.conversation.application.usecase.get_chat_room_status_usecase import GetChatRoomStatusUseCase
 from app.conversation.application.usecase.delete_chat_usecase import DeleteChatUseCase
 from app.conversation.application.usecase.get_chat_message_usecase import GetChatMessagesUseCase
 from app.conversation.application.usecase.get_chat_room_usecase import GetChatRoomsUseCase
@@ -117,6 +119,30 @@ async def delete_chat_room(
         raise HTTPException(status_code=404, detail="채팅방을 찾을 수 없거나 삭제 권한이 없습니다.")
 
     return {"message": "채팅방과 모든 메시지가 성공적으로 삭제되었습니다."}
+
+
+@conversation_router.patch("/rooms/{room_id}/end")
+async def end_chat(
+    room_id: str,
+    account_id: int = Depends(get_current_account_id),
+    db: Session = Depends(get_db_session),
+):
+    room_repo = ChatRoomRepositoryImpl(db)
+    uc = EndChatUseCase(room_repo)
+
+    await uc.execute(room_id=room_id, account_id=account_id)
+    return {"room_id": room_id, "status": "ENDED"}
+
+@conversation_router.get("/rooms/{room_id}/status")
+async def get_room_status(
+    room_id: str,
+    account_id: int = Depends(get_current_account_id),
+    db: Session = Depends(get_db_session),
+):
+    repo = ChatRoomRepositoryImpl(db)
+    uc = GetChatRoomStatusUseCase(repo)
+    status = await uc.execute(room_id, account_id)
+    return {"room_id": room_id, "status": status}
 
 
 @conversation_router.post("/feedback")
