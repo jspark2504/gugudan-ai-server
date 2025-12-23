@@ -1,7 +1,7 @@
 from app.conversation.application.port.out.chat_room_repository_port import ChatRoomRepositoryPort
 
 
-class EndChatUsecase:
+class EndChatUseCase:
 
     def __init__(
         self,

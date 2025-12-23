@@ -24,10 +24,17 @@ class ChatRoomRepositoryImpl(ChatRoomRepositoryPort):
     async def find_by_id(self, room_id):
         return self.db.get(ChatRoomOrm, room_id)
 
-    async def end_room(self, room_id):
-        room = await self.db.get(ChatRoomOrm, room_id)
+    async def end_room(self, room_id: str) -> bool:
+        room = self.db.get(ChatRoomOrm, room_id)
+
+        if not room:
+            return False
+
         room.status = "ENDED"
+        self.db.add(room)
         self.db.commit()
+        self.db.refresh(room)
+        return True
 
     async def find_by_account_id(self, account_id: int):
         return (
@@ -53,3 +60,15 @@ class ChatRoomRepositoryImpl(ChatRoomRepositoryPort):
         except Exception as e:
             self.db.rollback()
             raise e
+
+    async def find_status_by_room_id(self, room_id: str, account_id: int) -> str | None:
+        room = (
+            self.db.query(ChatRoomOrm.status)
+            .filter(
+                ChatRoomOrm.room_id == room_id,
+                ChatRoomOrm.account_id == account_id,
+            )
+            .first()
+        )
+        # room은 (status,) 튜플 형태
+        return room[0] if room else None
