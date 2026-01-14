@@ -39,13 +39,13 @@ fonts:
     - '/System/Library/Fonts/Supplemental/AppleMyungjo.ttf'
     - '/Library/Fonts/Arial Unicode.ttf'
     # Linux (Ubuntu/Debian)
-    - '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
-    - '/usr/share/fonts/truetype/nanum/NanumMyeongjo.ttf'
+    - '/usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc'
+    - '/usr/share/fonts/google-noto-cjk/NotoSansCJK-Bold.ttc'
     # Windows
     - 'C:\Windows\Fonts\malgun.ttf'
     - 'C:\Windows\Fonts\gulim.ttc'
 
-  default: 'Helvetica'
+  default: 'KoreanFont'
 
 # PDF 페이지 설정
 page:
